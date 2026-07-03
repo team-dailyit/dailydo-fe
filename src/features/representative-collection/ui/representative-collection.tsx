@@ -63,6 +63,7 @@ export const RepresentativeCollection = ({
                 height={80}
                 className="object-cover"
                 sizes="80px"
+                priority={true}
               />
             ) : (
               <QuestionBackIcon className="h-10 w-auto" />
