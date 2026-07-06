@@ -1,3 +1,4 @@
+'use client';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -93,7 +94,7 @@ export const CollectionBox = ({
           onClick={() => setIsOpen(true)}
         >
           {completed ? (
-            <Image src={src} alt="" width={80} height={80} sizes={'80'} />
+            <Image src={src} alt="" width={80} height={80} sizes={'80px'} />
           ) : isSpecial ? (
             <SpecialCollectionIcon width={80} height={80} />
           ) : (

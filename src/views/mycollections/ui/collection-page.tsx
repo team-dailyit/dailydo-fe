@@ -52,7 +52,6 @@ export const CollectionPage = () => {
             width={60}
             height={60}
             className={`absolute hidden opacity-[0.3] ${className}`}
-            // loading={'eager'}
             sizes="60px"
           />
         ))}
