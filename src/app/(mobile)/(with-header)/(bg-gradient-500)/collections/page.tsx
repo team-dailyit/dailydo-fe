@@ -8,8 +8,8 @@ import { collectionQueryKeys } from '@/entities/collection';
 import {
   getCollectionsServer,
   getUserCollectionServer,
-} from '@/entities/collection/api/collection.server-api';
-import { getQueryClient } from '@/shared/api/get-query-client';
+} from '@/entities/collection';
+import { getQueryClient } from '@/shared/api';
 import { CollectionPage } from '@/views/mycollections/ui/collection-page';
 
 export default async function Page() {
