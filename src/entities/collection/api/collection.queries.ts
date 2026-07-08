@@ -18,6 +18,7 @@ export const useGetUserCollection = () =>
   useQuery({
     queryKey: collectionQueryKeys.userCollection,
     queryFn: getUserCollection,
+    staleTime: 0,
   });
 
 export const usePostUserCollection = (options?: { onSuccess?: () => void }) => {
