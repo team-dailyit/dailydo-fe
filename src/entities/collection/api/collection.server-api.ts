@@ -1,5 +1,5 @@
 import { API_ERRORS, ApiError } from '@/shared/api';
-import { serverApi } from '@/shared/api/fetch-server';
+import { serverApi } from '@/shared/api/server';
 
 import { Collections, UserCollection } from '../model/collection.types';
 
