@@ -1,4 +1,4 @@
-import { clientApi } from '@/shared/api/fetch-client';
+import { clientApi } from '@/shared/api';
 
 import { Collections, UserCollection } from '../model/collection.types';
 

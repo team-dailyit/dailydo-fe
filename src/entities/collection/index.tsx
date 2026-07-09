@@ -5,10 +5,6 @@ export {
   usePostUserCollection,
 } from './api/collection.queries';
 export {
-  getCollectionsServer,
-  getUserCollectionServer,
-} from './api/collection.server-api';
-export {
   COLLECTION_TABS,
   collectionQueryKeys,
 } from './model/collection.constants';
