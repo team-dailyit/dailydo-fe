@@ -10,7 +10,7 @@ import {
   getUserCollectionServer,
 } from '@/entities/collection/server';
 import { getQueryClient } from '@/shared/api/server';
-import { CollectionPage } from '@/views/mycollections/ui/collection-page';
+import { CollectionPage } from '@/views/mycollections';
 
 export default async function Page() {
   const queryClient: QueryClient = getQueryClient();
