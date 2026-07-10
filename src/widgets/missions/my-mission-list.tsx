@@ -106,7 +106,11 @@ const MyMissionBackContent = ({
         {mission.title}
       </p>
       <Image
-        src={mission.completed ? mission.mylog!.photo : mission.image}
+        src={
+          mission.completed
+            ? (mission.mylog?.photo ?? mission.image)
+            : mission.image
+        }
         alt={mission.title}
         width={147}
         height={147}

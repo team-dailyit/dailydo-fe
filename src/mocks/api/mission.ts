@@ -1,8 +1,9 @@
 import { http, HttpResponse } from 'msw';
 
+import { MissionItem } from '@/entities/missions/model/mission.types';
 import { BASE_URL } from '@/shared/api';
 
-const mockMissionItems = [
+const mockMissionItems: MissionItem[] = [
   {
     missionId: 1,
     title: '구름 사진 찍기',
