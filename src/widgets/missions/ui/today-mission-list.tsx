@@ -11,8 +11,7 @@ import { usePostTodayMissions } from '@/entities/missions/api/mission.queries';
 import { MISSION_TOAST_MESSAGES } from '@/entities/missions/model/mission.constants';
 import { MissionItem } from '@/entities/missions/model/mission.types';
 import { useMissionCardState } from '@/entities/missions/model/use-mission-card-state';
-import { Card } from '@/features/card';
-import { useCard } from '@/features/card/card-context';
+import { Card, useCard } from '@/features/card';
 import { Button } from '@/shared/ui/button';
 import { useToast } from '@/shared/ui/toast';
 import { cn } from '@/shared/utils/cn';
@@ -20,8 +19,8 @@ import {
   categoryBadgeStyles,
   getMissionSelectionVariant,
   titleStyles,
-} from '@/widgets/missions/mission-card.styles';
-import { MissionCardFront } from '@/widgets/missions/mission-card-front';
+} from '@/widgets/missions/ui/mission-card.styles';
+import { MissionCardFront } from '@/widgets/missions/ui/mission-card-front';
 
 interface TodayMissionBackContentProps {
   mission: MissionItem;

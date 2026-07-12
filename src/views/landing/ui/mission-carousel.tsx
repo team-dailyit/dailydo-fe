@@ -14,7 +14,7 @@ import { cn } from '@/shared/utils/cn';
 import {
   categoryBadgeStyles,
   titleStyles,
-} from '@/widgets/missions/mission-card.styles';
+} from '@/widgets/missions/ui/mission-card.styles';
 
 import { LANDING_MISSIONS, type LandingMission } from '../model/missions';
 
