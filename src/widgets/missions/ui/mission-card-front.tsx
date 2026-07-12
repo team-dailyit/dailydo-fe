@@ -1,6 +1,6 @@
 'use client';
 
-import { useCard } from '@/features/card/card-context';
+import { useCard } from '@/features/card';
 import QuestionBackIcon from '@/shared/ui/icons/mission/question_back.svg';
 import SpecialBackIcon from '@/shared/ui/icons/mission/special_back.svg';
 import { cn } from '@/shared/utils/cn';

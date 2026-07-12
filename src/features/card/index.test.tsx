@@ -7,8 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { Mission, MyMission } from '@/entities/missions/model/mission.types';
 import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
-import { MyMissionCard } from '@/widgets/missions/my-mission-list';
-import { TodayMissionCard } from '@/widgets/missions/today-mission-list';
+import { MyMissionCard, TodayMissionCard } from '@/widgets/missions';
 
 jest.mock('../../entities/file/api/file.queries', () => ({
   useFileUpload: () => ({
