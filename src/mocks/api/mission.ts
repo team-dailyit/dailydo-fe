@@ -1,6 +1,9 @@
 import { http, HttpResponse } from 'msw';
 
-import { MissionItem } from '@/entities/missions/model/mission.types';
+import {
+  MissionItem,
+  MyMissionItem,
+} from '@/entities/missions/model/mission.types';
 import { BASE_URL } from '@/shared/api';
 
 const mockMissionItems: MissionItem[] = [
@@ -78,6 +81,16 @@ const mockMissionItems: MissionItem[] = [
 
 let confirmedMissionIds: number[] = [];
 
+const toMyMissionItem = (item: MissionItem): MyMissionItem => ({
+  ...item,
+  itemId: item.missionId,
+  myCompletedCount: 0,
+  completed: false,
+  completedAt: '',
+  mylog: null,
+  unlockedCollections: [],
+});
+
 export const handlers = [
   // 오늘의 미션 목록 조회
   http.get(`${BASE_URL}/api/missions/new`, () => {
@@ -100,12 +113,31 @@ export const handlers = [
 
   // 내 미션 목록 조회
   http.get(`${BASE_URL}/api/missions`, () => {
-    const items = mockMissionItems.filter((m) =>
-      confirmedMissionIds.includes(m.missionId),
-    );
+    const items = mockMissionItems
+      .filter((m) => confirmedMissionIds.includes(m.missionId))
+      .map(toMyMissionItem);
     return HttpResponse.json({
       isGuest: false,
       items,
+    });
+  }),
+
+  // 미션 완료 처리
+  http.post(`${BASE_URL}/api/missions/:itemId`, async ({ params, request }) => {
+    const itemId = Number(params.itemId);
+    const source = mockMissionItems.find((m) => m.missionId === itemId);
+    const { mylog } = (await request.json()) as {
+      mylog: { photo: string; memo: string };
+    };
+
+    return HttpResponse.json({
+      ...(source ?? {}),
+      itemId,
+      myCompletedCount: 1,
+      completed: true,
+      completedAt: new Date().toISOString(),
+      mylog: { id: itemId, photo: mylog.photo, memo: mylog.memo },
+      unlockedCollections: [],
     });
   }),
 ];

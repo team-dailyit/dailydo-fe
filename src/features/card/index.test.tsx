@@ -1,16 +1,33 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import confetti from 'canvas-confetti';
+import { http, HttpResponse } from 'msw';
 
 import { Mission, MyMission } from '@/entities/missions/model/mission.types';
+import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
 import { MyMissionCard } from '@/widgets/missions/my-mission-list';
 import { TodayMissionCard } from '@/widgets/missions/today-mission-list';
 
+jest.mock('../../entities/file/api/file.queries', () => ({
+  useFileUpload: () => ({
+    mutateAsync: jest.fn().mockResolvedValue('/mock-uploaded-photo.jpg'),
+    isPending: false,
+  }),
+}));
+
+const uploadMockPhoto = async (user: ReturnType<typeof userEvent.setup>) => {
+  const fileInput = document.querySelector(
+    'input[type="file"]',
+  ) as HTMLInputElement;
+  const file = new File(['photo'], 'photo.png', { type: 'image/png' });
+  await user.upload(fileInput, file);
+};
+
 const fetchMissions = async (): Promise<Mission> => {
   const res = await fetch(`${BASE_URL}/api/missions/new`);
-  const json = await res.json();
-  return json.data;
+  return res.json();
 };
 
 const fetchMyMissions = async (): Promise<MyMission> => {
@@ -68,7 +85,7 @@ describe('카드 컴포넌트', () => {
     test('앞면 요소들이 렌더링된 미션의 경우', () => {
       render(<TodayMissionCard mission={missionData.items[2]} />);
 
-      expect(screen.getByText('히든 미션')).toBeInTheDocument();
+      expect(screen.getByText('스페셜 미션')).toBeInTheDocument();
       expect(screen.getByText('탭해서 확인하기')).toBeInTheDocument();
     });
   });
@@ -97,7 +114,10 @@ describe('카드 컴포넌트', () => {
     test('선택하기 클릭 시 도전자 수와 취소하기가 표시된다', async () => {
       const user = userEvent.setup();
       const { container } = render(
-        <TodayMissionCard mission={missionData.items[0]} />,
+        <TodayMissionCard
+          mission={missionData.items[0]}
+          onSelect={() => true}
+        />,
       );
 
       await user.click(container.firstChild as HTMLElement);
@@ -120,12 +140,16 @@ describe('카드 컴포넌트', () => {
     test('취소하기 클릭 시 선택이 해제되고 선택하기, 넘기기 버튼이 보인다.', async () => {
       const user = userEvent.setup();
       const { container } = render(
-        <TodayMissionCard mission={missionData.items[0]} />,
+        <TodayMissionCard
+          mission={missionData.items[0]}
+          onSelect={() => true}
+        />,
       );
 
       await user.click(container.firstChild as HTMLElement);
       await user.click(screen.getByRole('button', { name: '선택하기' }));
-      await user.click(screen.getByText('취소하기'));
+      expect(screen.getByText('취소하기')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: '취소하기' }));
 
       expect(
         screen.getByRole('button', { name: '선택하기' }),
@@ -165,7 +189,11 @@ describe('카드 컴포넌트', () => {
       const user = userEvent.setup();
       const onCancel = jest.fn();
       const { container } = render(
-        <TodayMissionCard mission={missionData.items[0]} onCancel={onCancel} />,
+        <TodayMissionCard
+          mission={missionData.items[0]}
+          onCancel={onCancel}
+          onSelect={() => true}
+        />,
       );
 
       await user.click(container.firstChild as HTMLElement);
@@ -177,6 +205,17 @@ describe('카드 컴포넌트', () => {
   });
 
   describe('나의 미션 목록', () => {
+    beforeEach(async () => {
+      await fetch(`${BASE_URL}/api/missions/new`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          missionIds: missionData.items.map((item) => item.missionId),
+        }),
+      });
+      myMissionData = await fetchMyMissions();
+    });
+
     test('카드가 뒤집힌 상태로 렌더링된다', () => {
       render(<MyMissionCard mission={myMissionData.items[2]} />, {
         wrapper: createWrapper(),
@@ -257,13 +296,121 @@ describe('카드 컴포넌트', () => {
     });
 
     test('완료된 미션은 카테고리와 제목이 표시된다', () => {
-      const completedMission = { ...myMissionData.items[2], completed: true };
+      const completedMission = { ...myMissionData.items[0], completed: true };
       render(<MyMissionCard mission={completedMission} />, {
         wrapper: createWrapper(),
       });
       expect(
-        screen.getByText(myMissionData.items[2].categoryName),
+        screen.getByText(myMissionData.items[0].categoryName),
       ).toBeInTheDocument();
+      expect(
+        screen.getByText(myMissionData.items[0].title),
+      ).toBeInTheDocument();
+    });
+
+    test('완료된 미션은 마이로그 사진이 없으면 대표 이미지로 대체된다', () => {
+      const completedMission = {
+        ...myMissionData.items[0],
+        completed: true,
+        mylog: null,
+        image: '/fallback-image.jpg',
+      };
+      render(<MyMissionCard mission={completedMission} />, {
+        wrapper: createWrapper(),
+      });
+
+      const img = screen.getByRole('img', { name: completedMission.title });
+      expect(img).toHaveAttribute(
+        'src',
+        expect.stringContaining(encodeURIComponent('/fallback-image.jpg')),
+      );
+    });
+
+    test('완료된 미션은 마이로그 사진이 있으면 그 사진을 보여준다', () => {
+      const completedMission = {
+        ...myMissionData.items[0],
+        completed: true,
+        mylog: { id: 1, photo: '/mylog-photo.jpg', memo: '메모' },
+        image: '/fallback-image.jpg',
+      };
+      render(<MyMissionCard mission={completedMission} />, {
+        wrapper: createWrapper(),
+      });
+
+      const img = screen.getByRole('img', { name: completedMission.title });
+      expect(img).toHaveAttribute(
+        'src',
+        expect.stringContaining(encodeURIComponent('/mylog-photo.jpg')),
+      );
+    });
+
+    test('마이로그를 작성하고 완료하기를 누르면 미션이 완료 처리된다', async () => {
+      const user = userEvent.setup();
+      render(<MyMissionCard mission={myMissionData.items[0]} />, {
+        wrapper: createWrapper(),
+      });
+
+      await user.click(screen.getByRole('button', { name: '완료하기' }));
+      await user.type(
+        screen.getByPlaceholderText('최대 100자까지 입력 가능해요.'),
+        '오늘 미션 완료!',
+      );
+      await uploadMockPhoto(user);
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: '완료하기',
+      });
+      await user.click(submitButtons[submitButtons.length - 1]);
+
+      await waitFor(() => {
+        expect(screen.queryByText('마이로그 작성')).not.toBeInTheDocument();
+      });
+    });
+
+    test('미션 완료로 컬렉션을 획득하면 컬렉션 안내 바텀시트가 뜨고 컨페티가 실행된다', async () => {
+      server.use(
+        http.post(`${BASE_URL}/api/missions/:itemId`, () =>
+          HttpResponse.json({
+            itemId: myMissionData.items[0].itemId,
+            completed: true,
+            completedAt: new Date().toISOString(),
+            myCompletedCount: 1,
+            totalCompletedCount: myMissionData.items[0].totalCompletedCount,
+            mylog: { id: 1, photo: '/mylog-photo.jpg', memo: '메모' },
+            unlockedCollections: [
+              {
+                collectionId: 'collection-1',
+                title: '테스트 컬렉션',
+                type: 'NORMAL',
+                image: '/collection.jpg',
+                description: '테스트 컬렉션 설명',
+              },
+            ],
+          }),
+        ),
+      );
+
+      const user = userEvent.setup();
+      render(<MyMissionCard mission={myMissionData.items[0]} />, {
+        wrapper: createWrapper(),
+      });
+
+      await user.click(screen.getByRole('button', { name: '완료하기' }));
+      await user.type(
+        screen.getByPlaceholderText('최대 100자까지 입력 가능해요.'),
+        '오늘 미션 완료!',
+      );
+      await uploadMockPhoto(user);
+
+      const submitButtons = screen.getAllByRole('button', {
+        name: '완료하기',
+      });
+      await user.click(submitButtons[submitButtons.length - 1]);
+
+      expect(await screen.findByText('테스트 컬렉션')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(confetti).toHaveBeenCalled();
+      });
     });
   });
 });
