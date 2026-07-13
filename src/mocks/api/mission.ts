@@ -1,9 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
-import {
-  MissionItem,
-  MyMissionItem,
-} from '@/entities/missions/model/mission.types';
+import { MissionItem, MyMissionItem } from '@/entities/missions';
 import { BASE_URL } from '@/shared/api';
 
 const mockMissionItems: MissionItem[] = [

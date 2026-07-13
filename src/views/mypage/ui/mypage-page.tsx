@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { useGetMyMissionsQuery } from '@/entities/missions/api/mission.queries';
+import { useGetMyMissionsQuery } from '@/entities/missions';
 import { useGetMe, usePatchMe } from '@/entities/user';
 import { Button } from '@/shared/ui/button';
 import { FallbackUI } from '@/shared/ui/fallback-ui';

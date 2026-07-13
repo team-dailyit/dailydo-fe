@@ -11,10 +11,7 @@ import { Card } from '@/features/card';
 import QuestionBackIcon from '@/shared/ui/icons/mission/question_back.svg';
 import { Loader } from '@/shared/ui/loader';
 import { cn } from '@/shared/utils/cn';
-import {
-  categoryBadgeStyles,
-  titleStyles,
-} from '@/widgets/missions/ui/mission-card.styles';
+import { categoryBadgeStyles, titleStyles } from '@/widgets/missions';
 
 import { LANDING_MISSIONS, type LandingMission } from '../model/missions';
 
