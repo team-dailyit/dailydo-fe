@@ -78,7 +78,10 @@ const mockMissionItems: MissionItem[] = [
 
 let confirmedMissionIds: number[] = [];
 
-const completedMissions = new Map<number, { completedAt: string; mylog: MyLog }>();
+const completedMissions = new Map<
+  number,
+  { completedAt: string; mylog: MyLog }
+>();
 
 export const resetMissionMocks = () => {
   confirmedMissionIds = [];
