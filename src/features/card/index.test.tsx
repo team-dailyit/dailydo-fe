@@ -1,13 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import confetti from 'canvas-confetti';
 import { http, HttpResponse } from 'msw';
+import { Suspense } from 'react';
 
-import { Mission, MyMission } from '@/entities/missions';
+import { Mission, MyMission, MyMissionItem } from '@/entities/missions';
+import { resetMissionMocks } from '@/mocks/api/mission';
 import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
-import { MyMissionCard, TodayMissionCard } from '@/widgets/missions';
+import {
+  MyMissionCard,
+  MyMissionList,
+  TodayMissionCard,
+} from '@/widgets/missions';
 
 jest.mock('../../entities/file/api/file.queries', () => ({
   useFileUpload: () => ({
@@ -17,9 +23,7 @@ jest.mock('../../entities/file/api/file.queries', () => ({
 }));
 
 const uploadMockPhoto = async (user: ReturnType<typeof userEvent.setup>) => {
-  const fileInput = document.querySelector(
-    'input[type="file"]',
-  ) as HTMLInputElement;
+  const fileInput = screen.getByLabelText('사진 첨부', { selector: 'input' });
   const file = new File(['photo'], 'photo.png', { type: 'image/png' });
   await user.upload(fileInput, file);
 };
@@ -204,7 +208,10 @@ describe('카드 컴포넌트', () => {
   });
 
   describe('나의 미션 목록', () => {
+    let specialMission: MyMissionItem;
+
     beforeEach(async () => {
+      resetMissionMocks();
       await fetch(`${BASE_URL}/api/missions/new`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,10 +220,11 @@ describe('카드 컴포넌트', () => {
         }),
       });
       myMissionData = await fetchMyMissions();
+      specialMission = myMissionData.items[2];
     });
 
     test('카드가 뒤집힌 상태로 렌더링된다', () => {
-      render(<MyMissionCard mission={myMissionData.items[2]} />, {
+      render(<MyMissionCard mission={specialMission} />, {
         wrapper: createWrapper(),
       });
 
@@ -235,19 +243,19 @@ describe('카드 컴포넌트', () => {
     });
 
     test('히든 미션의 경우 카테고리 이름이 나오지 않고 히든 미션으로 나온다', () => {
-      render(<MyMissionCard mission={myMissionData.items[2]} />, {
+      render(<MyMissionCard mission={specialMission} />, {
         wrapper: createWrapper(),
       });
 
       expect(screen.getByText('히든 미션')).toBeInTheDocument();
       expect(
-        screen.queryByText(myMissionData.items[2].categoryName),
+        screen.queryByText(specialMission.categoryName),
       ).not.toBeInTheDocument();
     });
 
     test('완료하기 클릭 시 바텀 시트 나온다', async () => {
       const user = userEvent.setup();
-      render(<MyMissionCard mission={myMissionData.items[2]} />, {
+      render(<MyMissionCard mission={specialMission} />, {
         wrapper: createWrapper(),
       });
 
@@ -261,7 +269,7 @@ describe('카드 컴포넌트', () => {
 
     test('완료하기 클릭 후 취소하기 클릭 시 바텀 시트 닫힌다', async () => {
       const user = userEvent.setup();
-      render(<MyMissionCard mission={myMissionData.items[2]} />, {
+      render(<MyMissionCard mission={specialMission} />, {
         wrapper: createWrapper(),
       });
 
@@ -273,7 +281,7 @@ describe('카드 컴포넌트', () => {
 
     test('바텀 시트에서 취소하기 클릭 시 시트가 닫힌다', async () => {
       const user = userEvent.setup();
-      render(<MyMissionCard mission={myMissionData.items[2]} />, {
+      render(<MyMissionCard mission={specialMission} />, {
         wrapper: createWrapper(),
       });
 
@@ -284,7 +292,7 @@ describe('카드 컴포넌트', () => {
     });
 
     test('완료된 미션은 완료하기 버튼이 없다', () => {
-      const completedMission = { ...myMissionData.items[2], completed: true };
+      const completedMission = { ...specialMission, completed: true };
       render(<MyMissionCard mission={completedMission} />, {
         wrapper: createWrapper(),
       });
@@ -343,27 +351,40 @@ describe('카드 컴포넌트', () => {
       );
     });
 
-    test('마이로그를 작성하고 완료하기를 누르면 미션이 완료 처리된다', async () => {
+    test('마이로그를 작성하고 완료하기를 누르면 목록의 카드도 완료 상태로 바뀐다', async () => {
       const user = userEvent.setup();
-      render(<MyMissionCard mission={myMissionData.items[0]} />, {
-        wrapper: createWrapper(),
-      });
+      const targetMission = myMissionData.items[0];
 
-      await user.click(screen.getByRole('button', { name: '완료하기' }));
+      render(
+        <Suspense fallback={null}>
+          <MyMissionList />
+        </Suspense>,
+        { wrapper: createWrapper() },
+      );
+
+      const card = (await screen.findByText(targetMission.title)).closest(
+        '[role="button"]',
+      ) as HTMLElement;
+
+      await user.click(within(card).getByRole('button', { name: '완료하기' }));
       await user.type(
         screen.getByPlaceholderText('최대 100자까지 입력 가능해요.'),
         '오늘 미션 완료!',
       );
       await uploadMockPhoto(user);
 
-      const submitButtons = screen.getAllByRole('button', {
-        name: '완료하기',
-      });
-      await user.click(submitButtons[submitButtons.length - 1]);
+      const submitButton = screen
+        .getAllByRole('button', { name: '완료하기' })
+        .find((button) => !button.closest('[role="button"]')) as HTMLElement;
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(screen.queryByText('마이로그 작성')).not.toBeInTheDocument();
       });
+      expect(
+        within(card).queryByRole('button', { name: '완료하기' }),
+      ).not.toBeInTheDocument();
+      expect(within(card).getByText('오늘 미션 완료!')).toBeInTheDocument();
     });
 
     test('미션 완료로 컬렉션을 획득하면 컬렉션 안내 바텀시트가 뜨고 컨페티가 실행된다', async () => {
@@ -401,10 +422,10 @@ describe('카드 컴포넌트', () => {
       );
       await uploadMockPhoto(user);
 
-      const submitButtons = screen.getAllByRole('button', {
-        name: '완료하기',
-      });
-      await user.click(submitButtons[submitButtons.length - 1]);
+      const submitButton = screen
+        .getAllByRole('button', { name: '완료하기' })
+        .find((button) => !button.closest('[role="button"]')) as HTMLElement;
+      await user.click(submitButton);
 
       expect(await screen.findByText('테스트 컬렉션')).toBeInTheDocument();
       await waitFor(() => {

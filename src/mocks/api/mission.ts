@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
-import { MissionItem, MyMissionItem } from '@/entities/missions';
+import { MissionItem, MyLog, MyMissionItem } from '@/entities/missions';
 import { BASE_URL } from '@/shared/api';
 
 const mockMissionItems: MissionItem[] = [
@@ -78,15 +78,25 @@ const mockMissionItems: MissionItem[] = [
 
 let confirmedMissionIds: number[] = [];
 
-const toMyMissionItem = (item: MissionItem): MyMissionItem => ({
-  ...item,
-  itemId: item.missionId,
-  myCompletedCount: 0,
-  completed: false,
-  completedAt: '',
-  mylog: null,
-  unlockedCollections: [],
-});
+const completedMissions = new Map<number, { completedAt: string; mylog: MyLog }>();
+
+export const resetMissionMocks = () => {
+  confirmedMissionIds = [];
+  completedMissions.clear();
+};
+
+const toMyMissionItem = (item: MissionItem): MyMissionItem => {
+  const completion = completedMissions.get(item.missionId);
+  return {
+    ...item,
+    itemId: item.missionId,
+    myCompletedCount: completion ? 1 : 0,
+    completed: Boolean(completion),
+    completedAt: completion?.completedAt ?? '',
+    mylog: completion?.mylog ?? null,
+    unlockedCollections: [],
+  };
+};
 
 export const handlers = [
   // 오늘의 미션 목록 조회
@@ -127,12 +137,18 @@ export const handlers = [
       mylog: { photo: string; memo: string };
     };
 
+    const completedAt = new Date().toISOString();
+    completedMissions.set(itemId, {
+      completedAt,
+      mylog: { id: itemId, photo: mylog.photo, memo: mylog.memo },
+    });
+
     return HttpResponse.json({
       ...(source ?? {}),
       itemId,
       myCompletedCount: 1,
       completed: true,
-      completedAt: new Date().toISOString(),
+      completedAt,
       mylog: { id: itemId, photo: mylog.photo, memo: mylog.memo },
       unlockedCollections: [],
     });
