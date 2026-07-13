@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useFileUpload } from '@/entities/file/api/file.queries';
-import { MISSION_TOAST_MESSAGES } from '@/entities/missions/model/mission.constants';
+import { MISSION_TOAST_MESSAGES } from '@/entities/missions';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import { Button } from '@/shared/ui/button/button';
 import { FileInput } from '@/shared/ui/file-input';

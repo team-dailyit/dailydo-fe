@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  useGetMyMissions,
-  useGetTodayMissions,
-} from '@/entities/missions/api/mission.queries';
+import { useGetMyMissions, useGetTodayMissions } from '@/entities/missions';
 
 export const MissionBadge = () => {
   const { data: todayMissions } = useGetTodayMissions();

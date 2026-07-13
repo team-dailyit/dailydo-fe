@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import confetti from 'canvas-confetti';
 import { http, HttpResponse } from 'msw';
 
-import { Mission, MyMission } from '@/entities/missions/model/mission.types';
+import { Mission, MyMission } from '@/entities/missions';
 import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
 import { MyMissionCard, TodayMissionCard } from '@/widgets/missions';
