@@ -22,6 +22,22 @@ const makeCollectionItem = (
   ...overrides,
 });
 
+const makeSpecialCollectionItem = (
+  overrides: Partial<CollectionItem> = {},
+): CollectionItem =>
+  makeCollectionItem({
+    collectionId: '2',
+    title: '히든 컬렉션',
+    image: '/mocks/images/test_image.png',
+    completed: false,
+
+    type: 'SPECIAL',
+    description: '',
+    acquisitionRate: 50,
+    requirements: [],
+    ...overrides,
+  });
+
 const fetchCollectionList = async (): Promise<Collections> => {
   const res = await fetch(`${BASE_URL}/api/users/collections`);
   return res.json();
@@ -110,17 +126,27 @@ describe('컬렉션 페이지 테스트', () => {
         expect(await screen.findByText(expectedMessage)).toBeInTheDocument();
       },
     );
-    test('컬렉션 목록 중 히든 컬렉션인지 확인하기(title이 ???인지 따로 확인해야 하나)', async () => {});
+    test('컬렉션 목록 중 히든 컬렉션인지 확인하기(title이 ???인지 따로 확인해야 하나)', async () => {
+      server.use(
+        http.get(`${BASE_URL}/api/users/collections`, () =>
+          HttpResponse.json({
+            collections: [makeSpecialCollectionItem({ completed: false })],
+          }),
+        ),
+      );
+
+      collectionData = await fetchCollectionList();
+      render(<CollectionPage />, { wrapper: createWrapper() });
+
+      expect(await screen.findByText('???')).toBeInTheDocument();
+      expect(
+        screen.queryByText(collectionData.collections[0].title),
+      ).not.toBeInTheDocument();
+    });
   });
   describe('대표 컬렉션 설정', () => {
-    //바텀 시트 열려서 안에 내용 확인
     test('대표 컬렉션 설정이 정상적으로 되는지 확인', async () => {});
-  });
-  describe('대표 컬렉션 해제 후 정상적으로 해제 되었늕 확인', () => {
-    //바텀 시트 열려서 안에 내용 확인
-    test('대표 컬렉션 설정이 정상적으로 되는지 확인', async () => {});
-  });
-  describe('대표 컬렉션 에러 fallbackui 정상 나오는지 확인', () => {
+    test('대표 컬렉션 해제 후 정상적으로 해제 되었는지 확인', async () => {});
     test('대표 컬렉션 에러 fallbackui 정상 나오는지 확인', async () => {});
   });
 });
