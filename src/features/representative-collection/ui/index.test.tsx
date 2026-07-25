@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 
 import { CollectionItem, Collections } from '@/entities/collection';
+import { resetCollectionMocks } from '@/mocks/api/collection';
 import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
 import { CollectionPage } from '@/views/mycollections';
@@ -56,6 +57,7 @@ const createWrapper = () => {
 };
 
 beforeEach(async () => {
+  resetCollectionMocks();
   collectionData = await fetchCollectionList();
 });
 
@@ -79,7 +81,33 @@ describe('컬렉션 페이지 테스트', () => {
       ) as HTMLElement;
       expect(representativeButton.querySelector('img')).not.toBeInTheDocument();
     });
-    test('대표 컬렉션이 설정되었을때 확인하기', async () => {});
+    test('대표 컬렉션이 설정되었을때 확인하기', async () => {
+      server.use(
+        http.get(`${BASE_URL}/api/users/me/collections/featured`, () =>
+          HttpResponse.json({
+            id: collectionData.collections[0].collectionId,
+            image: collectionData.collections[0].image,
+            title: collectionData.collections[0].title,
+          }),
+        ),
+      );
+      render(<CollectionPage />, { wrapper: createWrapper() });
+
+      const titleLabel = await screen.findByText(
+        collectionData.collections[0].title,
+      );
+      const representativeButton = titleLabel.closest(
+        'button',
+      ) as HTMLElement;
+      const image = representativeButton.querySelector('img');
+
+      expect(image).toHaveAttribute(
+        'src',
+        expect.stringContaining(
+          encodeURIComponent(collectionData.collections[0].image),
+        ),
+      );
+    });
   });
   describe('컬렉션 목록 조회 테스트', () => {
     test('컬렉션 목록이 정상적으로 조회되는지 확인', async () => {
@@ -145,8 +173,40 @@ describe('컬렉션 페이지 테스트', () => {
     });
   });
   describe('대표 컬렉션 설정', () => {
-    test('대표 컬렉션 설정이 정상적으로 되는지 확인', async () => {});
-    test('대표 컬렉션 해제 후 정상적으로 해제 되었는지 확인', async () => {});
+    test('대표 컬렉션 설정이 정상적으로 되는지 확인', async () => {
+      await fetch(`${BASE_URL}/api/users/me/collections/featured`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collectionId: collectionData.collections[0].collectionId,
+        }),
+      });
+    });
+    test('대표 컬렉션 해제 후 정상적으로 해제 되었는지 확인', async () => {
+      await fetch(`${BASE_URL}/api/users/me/collections/featured`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collectionId: collectionData.collections[0].collectionId,
+        }),
+      });
+
+      const user = userEvent.setup();
+      render(<CollectionPage />, { wrapper: createWrapper() });
+
+      const representativeButton = (
+        await screen.findByText(collectionData.collections[0].title)
+      ).closest('button') as HTMLElement;
+      await user.click(representativeButton);
+
+      await user.click(
+        await screen.findByRole('button', { name: '대표 컬렉션에서 해제' }),
+      );
+
+      expect(
+        await screen.findByText('대표 컬렉션이 설정되지 않았어요.'),
+      ).toBeInTheDocument();
+    });
     test('대표 컬렉션 에러 fallbackui 정상 나오는지 확인', async () => {});
   });
 });
