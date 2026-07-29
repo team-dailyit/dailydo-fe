@@ -1,13 +1,29 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 
 import { CollectionItem, Collections } from '@/entities/collection';
+import * as collectionQueries from '@/entities/collection/api/collection.queries';
 import { resetCollectionMocks } from '@/mocks/api/collection';
 import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
 import { CollectionPage } from '@/views/mycollections';
+
+jest.mock('../../../entities/collection/api/collection.queries', () => ({
+  ...jest.requireActual('../../../entities/collection/api/collection.queries'),
+  useGetUserCollection: jest.fn(),
+}));
+
+const mockedUseGetUserCollection =
+  collectionQueries.useGetUserCollection as jest.MockedFunction<
+    typeof collectionQueries.useGetUserCollection
+  >;
+const actualUseGetUserCollection = (
+  jest.requireActual(
+    '../../../entities/collection/api/collection.queries',
+  ) as typeof collectionQueries
+).useGetUserCollection;
 
 const makeCollectionItem = (
   overrides: Partial<CollectionItem>,
@@ -56,8 +72,16 @@ const createWrapper = () => {
   return Wrapper;
 };
 
+// 대표 컬렉션 버튼 안에는 컬렉션 제목이 그리드에도 중복으로 나올 수 있어
+// 항상 이 버튼으로 스코프를 좁혀서 확인한다.
+const getRepresentativeButton = () =>
+  screen
+    .getByRole('heading', { name: '나의 대표 컬렉션' })
+    .closest('button') as HTMLElement;
+
 beforeEach(async () => {
   resetCollectionMocks();
+  mockedUseGetUserCollection.mockImplementation(actualUseGetUserCollection);
   collectionData = await fetchCollectionList();
 });
 
@@ -96,9 +120,7 @@ describe('컬렉션 페이지 테스트', () => {
       const titleLabel = await screen.findByText(
         collectionData.collections[0].title,
       );
-      const representativeButton = titleLabel.closest(
-        'button',
-      ) as HTMLElement;
+      const representativeButton = titleLabel.closest('button') as HTMLElement;
       const image = representativeButton.querySelector('img');
 
       expect(image).toHaveAttribute(
@@ -173,13 +195,71 @@ describe('컬렉션 페이지 테스트', () => {
     });
   });
   describe('대표 컬렉션 설정', () => {
-    test('대표 컬렉션 설정이 정상적으로 되는지 확인', async () => {
+    test('완료된 컬렉션을 클릭해 대표 컬렉션으로 설정할 수 있다', async () => {
+      const targetCollection = collectionData.collections.find(
+        (collection) => collection.completed,
+      )!;
+
+      const user = userEvent.setup();
+      render(<CollectionPage />, { wrapper: createWrapper() });
+
+      await user.click(
+        await screen.findByRole('button', { name: targetCollection.title }),
+      );
+      await user.click(
+        await screen.findByRole('button', { name: '대표 컬렉션으로 설정' }),
+      );
+
+      await waitFor(() => {
+        expect(
+          within(getRepresentativeButton()).getByText(targetCollection.title),
+        ).toBeInTheDocument();
+      });
+    });
+
+    test('대표 컬렉션을 다른 완료된 컬렉션으로 교체할 수 있다', async () => {
+      const secondCompleted = {
+        ...collectionData.collections[1],
+        completed: true,
+      };
+      server.use(
+        http.get(`${BASE_URL}/api/users/collections`, () =>
+          HttpResponse.json({
+            collections: [collectionData.collections[0], secondCompleted],
+          }),
+        ),
+      );
+
       await fetch(`${BASE_URL}/api/users/me/collections/featured`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           collectionId: collectionData.collections[0].collectionId,
         }),
+      });
+
+      const user = userEvent.setup();
+      render(<CollectionPage />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(
+          within(getRepresentativeButton()).getByText(
+            collectionData.collections[0].title,
+          ),
+        ).toBeInTheDocument();
+      });
+
+      await user.click(
+        await screen.findByRole('button', { name: secondCompleted.title }),
+      );
+      await user.click(
+        await screen.findByRole('button', { name: '대표 컬렉션으로 설정' }),
+      );
+
+      await waitFor(() => {
+        expect(
+          within(getRepresentativeButton()).getByText(secondCompleted.title),
+        ).toBeInTheDocument();
       });
     });
     test('대표 컬렉션 해제 후 정상적으로 해제 되었는지 확인', async () => {
@@ -207,6 +287,28 @@ describe('컬렉션 페이지 테스트', () => {
         await screen.findByText('대표 컬렉션이 설정되지 않았어요.'),
       ).toBeInTheDocument();
     });
-    test('대표 컬렉션 에러 fallbackui 정상 나오는지 확인', async () => {});
+    test('대표 컬렉션 에러 fallbackui 정상 나오는지 확인', async () => {
+      // getUserCollection이 내부에서 모든 에러를 catch해 null로 바꾸기 때문에
+      // MSW 응답만으로는 isError를 true로 만들 수 없어 훅 자체를 오버라이드한다.
+      const refetch = jest.fn();
+      mockedUseGetUserCollection.mockReturnValue({
+        data: undefined,
+        isError: true,
+        isPending: false,
+        refetch,
+      } as unknown as ReturnType<
+        typeof collectionQueries.useGetUserCollection
+      >);
+
+      const user = userEvent.setup();
+      render(<CollectionPage />, { wrapper: createWrapper() });
+
+      expect(
+        await screen.findByText(/페이지를 불러오는 중 문제가 생겼어요/),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: '다시시도' }));
+      expect(refetch).toHaveBeenCalledTimes(1);
+    });
   });
 });
