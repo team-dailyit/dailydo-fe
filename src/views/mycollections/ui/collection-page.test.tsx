@@ -2,13 +2,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import React from 'react';
 
 import { CollectionItem, Collections } from '@/entities/collection';
 import * as collectionQueries from '@/entities/collection/api/collection.queries';
 import { resetCollectionMocks } from '@/mocks/api/collection';
 import { server } from '@/mocks/server';
 import { BASE_URL } from '@/shared/api';
-import { CollectionPage } from '@/views/mycollections';
+
+import { CollectionPage } from './collection-page';
 
 jest.mock('../../../entities/collection/api/collection.queries', () => ({
   ...jest.requireActual('../../../entities/collection/api/collection.queries'),
@@ -117,10 +119,10 @@ describe('컬렉션 페이지 테스트', () => {
       );
       render(<CollectionPage />, { wrapper: createWrapper() });
 
-      const titleLabel = await screen.findByText(
+      const representativeButton = getRepresentativeButton();
+      await within(representativeButton).findByText(
         collectionData.collections[0].title,
       );
-      const representativeButton = titleLabel.closest('button') as HTMLElement;
       const image = representativeButton.querySelector('img');
 
       expect(image).toHaveAttribute(
@@ -274,9 +276,10 @@ describe('컬렉션 페이지 테스트', () => {
       const user = userEvent.setup();
       render(<CollectionPage />, { wrapper: createWrapper() });
 
-      const representativeButton = (
-        await screen.findByText(collectionData.collections[0].title)
-      ).closest('button') as HTMLElement;
+      const representativeButton = getRepresentativeButton();
+      await within(representativeButton).findByText(
+        collectionData.collections[0].title,
+      );
       await user.click(representativeButton);
 
       await user.click(
