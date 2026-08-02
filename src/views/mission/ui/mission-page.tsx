@@ -1,3 +1,5 @@
+'use client';
+
 import { MissionItem, useGetTodayMissions } from '@/entities/missions';
 import MissionHeader from '@/features/mission/mission-header';
 import { MyMissionList } from '@/widgets/missions';
