@@ -1,8 +1,9 @@
 'use client';
 
+import Image from 'next/image';
+
 import { useCard } from '@/features/card';
 import QuestionBackIcon from '@/shared/ui/icons/mission/question_back.svg';
-import SpecialBackIcon from '@/shared/ui/icons/mission/special_back.svg';
 import { cn } from '@/shared/utils/cn';
 
 export const MissionCardFront = () => {
@@ -11,7 +12,13 @@ export const MissionCardFront = () => {
     <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-4">
       {isSpecial ? (
         <div className="bg-special - flex h-20 w-20 items-center justify-center rounded-full">
-          <SpecialBackIcon className="h-20 w-20 animate-pulse" />
+          <Image
+            src="/mission/special-back.webp"
+            alt=""
+            width={80}
+            height={80}
+            className="animate-pulse"
+          />
         </div>
       ) : (
         <div className="--shadow-card flex h-20 w-20 items-center justify-center rounded-full bg-green-300">
