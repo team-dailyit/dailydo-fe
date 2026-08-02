@@ -118,7 +118,7 @@ export const handlers = [
   http.post(`${BASE_URL}/api/missions/new`, async ({ request }) => {
     const body = (await request.json()) as { missionIds: number[] };
     confirmedMissionIds = body.missionIds ?? [];
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // 내 미션 목록 조회

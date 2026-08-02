@@ -63,13 +63,13 @@ export const handlers = [
         collectionId: string;
       };
       featuredCollectionId = collectionId;
-      return HttpResponse.json(null, { status: 204 });
+      return new HttpResponse(null, { status: 204 });
     },
   ),
 
   // 대표 컬렉션 해제
   http.delete(`${BASE_URL}/api/users/me/collections/featured`, () => {
     featuredCollectionId = null;
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
 ];
