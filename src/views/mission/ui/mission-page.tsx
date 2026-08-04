@@ -1,8 +1,9 @@
-import { useGetTodayMissions } from '@/entities/missions/api/mission.queries';
-import { MissionItem } from '@/entities/missions/model/mission.types';
+'use client';
+
+import { MissionItem, useGetTodayMissions } from '@/entities/missions';
 import MissionHeader from '@/features/mission/mission-header';
-import { MyMissionList } from '@/widgets/missions/my-mission-list';
-import { TodayMissionList } from '@/widgets/missions/today-mission-list';
+import { MyMissionList } from '@/widgets/missions';
+import { TodayMissionList } from '@/widgets/missions';
 
 export const MyMissionListPage = () => {
   return (

@@ -4,7 +4,10 @@ export {
   useGetUserCollection,
   usePostUserCollection,
 } from './api/collection.queries';
-export { COLLECTION_TABS } from './model/collection.constants';
+export {
+  COLLECTION_TABS,
+  collectionQueryKeys,
+} from './model/collection.constants';
 export type {
   Collection,
   CollectionItem,

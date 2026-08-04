@@ -28,3 +28,10 @@ Object.assign(globalThis, {
   Request,
   Response,
 });
+
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = () => 'blob:mock-url';
+}
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = () => {};
+}

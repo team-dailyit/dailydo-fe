@@ -12,15 +12,12 @@ export const useGetCollections = () =>
   useQuery({
     queryKey: collectionQueryKeys.collections,
     queryFn: getCollections,
-    gcTime: 0,
-    staleTime: 0,
   });
 
 export const useGetUserCollection = () =>
   useQuery({
     queryKey: collectionQueryKeys.userCollection,
     queryFn: getUserCollection,
-    gcTime: 0,
     staleTime: 0,
   });
 

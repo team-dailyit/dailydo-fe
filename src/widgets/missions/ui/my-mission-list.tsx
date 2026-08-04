@@ -7,14 +7,12 @@ import type { Swiper as SwiperClass } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
 import {
-  useGetMyMissions,
-  usePostCompleteMission,
-} from '@/entities/missions/api/mission.queries';
-import { MISSION_TOAST_MESSAGES } from '@/entities/missions/model/mission.constants';
-import {
+  MISSION_TOAST_MESSAGES,
   MyMissionItem,
   UnlockedCollection,
-} from '@/entities/missions/model/mission.types';
+  useGetMyMissions,
+  usePostCompleteMission,
+} from '@/entities/missions';
 import { Card } from '@/features/card';
 import { MyLogBottomSheet } from '@/features/mylogs';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
@@ -106,7 +104,11 @@ const MyMissionBackContent = ({
         {mission.title}
       </p>
       <Image
-        src={mission.completed ? mission.mylog!.photo : mission.image}
+        src={
+          mission.completed
+            ? (mission.mylog?.photo ?? mission.image)
+            : mission.image
+        }
         alt={mission.title}
         width={147}
         height={147}

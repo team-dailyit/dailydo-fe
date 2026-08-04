@@ -1,8 +1,9 @@
 import { http, HttpResponse } from 'msw';
 
+import { MissionItem, MyLog, MyMissionItem } from '@/entities/missions';
 import { BASE_URL } from '@/shared/api';
 
-const mockMissionItems = [
+const mockMissionItems: MissionItem[] = [
   {
     missionId: 1,
     title: '구름 사진 찍기',
@@ -77,6 +78,29 @@ const mockMissionItems = [
 
 let confirmedMissionIds: number[] = [];
 
+const completedMissions = new Map<
+  number,
+  { completedAt: string; mylog: MyLog }
+>();
+
+export const resetMissionMocks = () => {
+  confirmedMissionIds = [];
+  completedMissions.clear();
+};
+
+const toMyMissionItem = (item: MissionItem): MyMissionItem => {
+  const completion = completedMissions.get(item.missionId);
+  return {
+    ...item,
+    itemId: item.missionId,
+    myCompletedCount: completion ? 1 : 0,
+    completed: Boolean(completion),
+    completedAt: completion?.completedAt ?? '',
+    mylog: completion?.mylog ?? null,
+    unlockedCollections: [],
+  };
+};
+
 export const handlers = [
   // 오늘의 미션 목록 조회
   http.get(`${BASE_URL}/api/missions/new`, () => {
@@ -94,17 +118,42 @@ export const handlers = [
   http.post(`${BASE_URL}/api/missions/new`, async ({ request }) => {
     const body = (await request.json()) as { missionIds: number[] };
     confirmedMissionIds = body.missionIds ?? [];
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // 내 미션 목록 조회
   http.get(`${BASE_URL}/api/missions`, () => {
-    const items = mockMissionItems.filter((m) =>
-      confirmedMissionIds.includes(m.missionId),
-    );
+    const items = mockMissionItems
+      .filter((m) => confirmedMissionIds.includes(m.missionId))
+      .map(toMyMissionItem);
     return HttpResponse.json({
       isGuest: false,
       items,
+    });
+  }),
+
+  // 미션 완료 처리
+  http.post(`${BASE_URL}/api/missions/:itemId`, async ({ params, request }) => {
+    const itemId = Number(params.itemId);
+    const source = mockMissionItems.find((m) => m.missionId === itemId);
+    const { mylog } = (await request.json()) as {
+      mylog: { photo: string; memo: string };
+    };
+
+    const completedAt = new Date().toISOString();
+    completedMissions.set(itemId, {
+      completedAt,
+      mylog: { id: itemId, photo: mylog.photo, memo: mylog.memo },
+    });
+
+    return HttpResponse.json({
+      ...(source ?? {}),
+      itemId,
+      myCompletedCount: 1,
+      completed: true,
+      completedAt,
+      mylog: { id: itemId, photo: mylog.photo, memo: mylog.memo },
+      unlockedCollections: [],
     });
   }),
 ];

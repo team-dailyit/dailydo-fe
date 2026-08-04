@@ -5,6 +5,7 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 
+import { collectionQueryKeys } from '@/entities/collection';
 import { mylogsQueryKeys } from '@/entities/mylogs';
 import { ApiError } from '@/shared/api';
 
@@ -120,6 +121,12 @@ export const usePostCompleteMission = (options?: {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: mylogsQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: mylogsQueryKeys.records() }),
+        queryClient.invalidateQueries({
+          queryKey: collectionQueryKeys.userCollection,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: collectionQueryKeys.collections,
+        }),
       ]);
     },
     onError: (error, variables, context) => {

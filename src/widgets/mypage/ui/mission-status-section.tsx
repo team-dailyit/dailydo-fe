@@ -1,6 +1,6 @@
 'use client';
 
-import { MyMission } from '@/entities/missions/model/mission.types';
+import { MyMission } from '@/entities/missions';
 import CheckCircle from '@/shared/ui/icons/mypage/check_circle.svg';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { TextSkeleton } from '@/shared/ui/skeleton';
