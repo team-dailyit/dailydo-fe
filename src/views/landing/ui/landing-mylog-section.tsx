@@ -34,13 +34,26 @@ export const LandingMylogSection = () => {
             alt=""
             width={120}
             height={120}
+            className="h-30 w-30"
           />
         </FadeIn>
         <FadeIn delay={200} className="flex items-center justify-end">
-          <Image src="/landing/bubble-1.png" alt="" width={180} height={70} />
+          <Image
+            src="/landing/bubble-1.png"
+            alt=""
+            width={180}
+            height={70}
+            className="h-17.5 w-45"
+          />
         </FadeIn>
         <FadeIn delay={250} className="flex items-center">
-          <Image src="/landing/bubble-2.png" alt="" width={220} height={70} />
+          <Image
+            src="/landing/bubble-2.png"
+            alt=""
+            width={220}
+            height={70}
+            className="h-17.5 w-55"
+          />
         </FadeIn>
       </div>
 
@@ -51,6 +64,7 @@ export const LandingMylogSection = () => {
             alt=""
             width={120}
             height={120}
+            className="h-30 w-30"
           />
         </FadeIn>
         <FadeIn
