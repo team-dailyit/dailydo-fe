@@ -10,19 +10,19 @@ import { CollectionGrid, CollectionTabs } from '@/widgets/collections';
 
 const DECO_IMAGES = [
   {
-    src: '/landing/collections/deco-0.png',
+    src: '/landing/collections/deco-0.webp',
     className: 'top-4 left-[13%] rotate-[7.412deg]',
   },
   {
-    src: '/landing/collections/deco-1.png',
+    src: '/landing/collections/deco-1.webp',
     className: 'top-4 right-[6%] rotate-[-10.845deg]',
   },
   {
-    src: '/landing/collections/deco-2.png',
+    src: '/landing/collections/deco-2.webp',
     className: 'bottom-4 left-[16%] rotate-[-8.718deg]',
   },
   {
-    src: '/landing/collections/deco-3.png',
+    src: '/landing/collections/deco-3.webp',
     className: 'bottom-4 right-[6%] rotate-[10.195deg]',
   },
 ];

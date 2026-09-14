@@ -37,7 +37,7 @@ export const LandingCollectionSection = () => {
         <div className="flex h-32 w-32 items-center justify-center rounded-full bg-green-500">
           <div className="relative h-30 w-30 rounded-full border-6 border-green-400 bg-green-100">
             <Image
-              src="/landing/collections/deco-0.png"
+              src="/landing/collections/deco-0.webp"
               alt=""
               fill
               className="object-contain"
@@ -63,7 +63,7 @@ export const LandingCollectionSection = () => {
                 {[...images, ...images].map((num, i) => (
                   <Image
                     key={i}
-                    src={`/landing/collections/deco-${num}.png`}
+                    src={`/landing/collections/deco-${num}.webp`}
                     alt=""
                     width={80}
                     height={80}
