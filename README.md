@@ -24,10 +24,11 @@ Daily:DO는 매일 작은 미션을 수행하고 하루를 기록하는 웹 애�
     <th>마이컬렉션</th>
   </tr>
   <tr>
-    <td><img alt="메인" src="https://github.com/user-attachments/assets/fb574509-1185-4c1f-bb0c-89c729373afe" width="100%"></td>
+    <td><img alt="메인" src="https://github.com/user-attachments/assets/0720ee70-0e95-43b5-a14d-8d63d785d94b" width="100%"></td>
     <td><img alt="오늘의 미션" src="https://github.com/user-attachments/assets/02870a34-f945-412d-b2c5-ef2aa3c2cba8" width="100%"></td>
     <td><img alt="마이컬렉션" src="https://github.com/user-attachments/assets/aab3c5d6-dcae-452d-9a59-b6731d4d0164" width="100%"></td>
   </tr>
+
   <tr>
     <th>마이로그</th>
     <th>마이로그 상세</th>
